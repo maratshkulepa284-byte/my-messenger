@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Мой Мессенджер</title>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background-color: #e5ddd5; height: 100vh; display: flex; }
+    #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; background-color: #fff; position: absolute; z-index: 10; }
+    #login-screen input { margin: 8px 0; padding: 12px; width: 280px; border: 1px solid #ccc; border-radius: 8px; }
+    #login-screen button { margin-top: 15px; padding: 12px 30px; background: #3390ec; color: white; border: none; cursor: pointer; border-radius: 8px; }
+    #main-app { display: none; width: 100%; height: 100vh; }
+    #sidebar { width: 30%; background: #fff; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
+    #sidebar-header { padding: 15px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+    .add-btn { background: #3390ec; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 5px; }
+
+    /* Строка поиска */
+    #search-bar { padding: 10px; border-bottom: 1px solid #eee; display: flex; }
+    #search-input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+    #search-btn { background: #3390ec; color: white; border: none; padding: 8px 12px; margin-left: 5px; cursor: pointer; border-radius: 5px; }
+
+    .chat-list-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+    .chat-list-item.active { background: #e3f2fd; }
+    #chat-area { flex: 1; display: flex; flex-direction: column; }
+    #chat-header { padding: 15px; background: #fff; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+    #messages { list-style: none; padding: 20px; flex-grow: 1; overflow-y: auto; background: #e5ddd5; margin: 0; }
+    #messages li { padding: 10px; margin-bottom: 10px; background: #fff; border-radius: 5px; width: fit-content; max-width: 70%; }
+    #form { display: flex; padding: 10px; background: #fff; }
+    #input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; margin-right: 10px; }
+    #form button { padding: 10px; background: #3390ec; color: white; border: none; cursor: pointer; }
+
+    /* ПРОФИЛЬ */
+    #profile-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #17212b; color: #fff; z-index: 20; flex-direction: column; align-items: center; font-family: 'Segoe UI', sans-serif; overflow-y: auto; }
+    .profile-top-bar { width: 100%; padding: 15px; }
+    .back-btn { background: #2b5278; color: #fff; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; }
+    .profile-avatar { width: 100px; height: 100px; border-radius: 50%; background: #3390ec; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; margin-top: 20px; }
+    .profile-name { font-size: 24px; margin-top: 15px; font-weight: bold; cursor: pointer; }
+    .profile-name:hover { text-decoration: underline; color: #64b5f6; }
+    .profile-info-box { background: #242f3d; width: 90%; max-width: 400px; margin-top: 25px; border-radius: 10px; padding: 15px; margin-bottom: 30px; }
+    .info-row { margin-bottom: 15px; }
+    .info-label { font-size: 12px; color: #7f91a4; margin-bottom: 3px; display: flex; justify-content: space-between; }
+    .edit-btn { background: none; border: none; color: #64b5f6; cursor: pointer; font-size: 12px; }
+    .info-value { font-size: 16px; }
+    .nft-gallery { width: 90%; max-width: 400px; margin-top: 20px; background: #242f3d; border-radius: 10px; padding: 15px; }
+    .nft-gallery-title { font-size: 16px; color: #fff; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #2b5278; padding-bottom: 10px; }
+    .nft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .nft-item { background: #17212b; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #2b5278; }
+.nft-item-icon { font-size: 30px; display: block; }
+    .nft-item-name { font-size: 10px; color: #7f91a4; margin-top: 5px; display: block; }
+    .no-gifts { grid-column: span 3; text-align: center; color: #7f91a4; font-size: 14px; padding: 10px; }
+    .gift-btn { background: linear-gradient(45deg, #e91e63, #ff9800); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 16px; font-weight: bold; width: 90%; max-width: 400px; }
+    #gift-store { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 30; align-items: center; justify-content: center; }
+    .store-content { background: #17212b; width: 90%; max-width: 500px; border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #2b5278; }
+    .store-title { font-size: 20px; margin-bottom: 20px; color: #fff; }
+    .gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .gift-item { background: #242f3d; border-radius: 10px; padding: 15px; cursor: pointer; border: 2px solid transparent; }
+    .gift-item:hover { border-color: #3390ec; }
+    .gift-item-icon { font-size: 50px; margin-bottom: 10px; display: block; }
+    .gift-item-name { font-size: 14px; color: #fff; font-weight: bold; }
+    .close-store { background: #e53935; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+    .gift-message { background: linear-gradient(135deg, #fff3e0, #ffcc80) !important; border: 2px solid #ff9800 !important; text-align: center; }
+    .gift-icon { font-size: 60px; display: block; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+  <div id="login-screen">
+    <h2>Вход</h2>
+    <input type="text" id="reg-phone" placeholder="Номер телефона">
+    <input type="password" id="reg-password" placeholder="Пароль">
+    <button onclick="login()">Войти</button>
+  </div>
+
+  <div id="main-app">
+    <div id="sidebar">
+      <div id="sidebar-header">
+        <h3>Чаты</h3>
+        <button class="add-btn" onclick="createRoom()">+</button>
+      </div>
+      
+      <!-- Строка поиска для ЛС -->
+      <div id="search-bar">
+        <input type="text" id="search-input" placeholder="@юзернейм">
+        <button id="search-btn" onclick="searchUser()">Найти</button>
+      </div>
+
+      <div id="chat-list"></div>
+    </div>
+    <div id="chat-area">
+      <div id="chat-header">
+        <h2 id="current-room-title">Общий чат</h2>
+        <button onclick="openProfile()" style="background:#3390ec; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:5px;">Профиль</button>
+      </div>
+      <ul id="messages"></ul>
+      <form id="form"><input id="input" autocomplete="off" placeholder="Сообщение..."><button>Отправить</button></form>
+    </div>
+  </div>
+
+  <div id="profile-screen">
+    <div class="profile-top-bar"><button class="back-btn" onclick="closeProfile()">← Назад</button></div>
+    <div class="profile-avatar" id="prof-avatar">A</div>
+    <div class="profile-name" id="prof-name" onclick="editName()">Имя</div>
+    <div class="nft-gallery">
+      <div class="nft-gallery-title">Мои NFT Подарки</div>
+      <div class="nft-grid" id="my-nft-grid"></div>
+    </div>
+    <button class="gift-btn" onclick="openGiftStore()">🎁 Подарить NFT</button>
+    <div class="profile-info-box">
+      <div class="info-row"><div class="info-label">Мобильный</div><div class="info-value" id="prof-phone">+7...</div></div>
+      <div class="info-row"><div class="info-label">Имя пользователя (@) <button class="edit-btn" onclick="editUsernameTag()">Изменить</button></div><div class="info-value" id="prof-usernameTag">@username</div></div>
+    </div>
+  </div>
+
+  <div id="gift-store">
+    <div class="store-content">
+      <div class="store-title">Выберите NFT Подарок</div>
+      <div class="gift-grid">
+        <div class="gift-item" onclick="sendGift('🧸', 'Мишка')"><span class="gift-item-icon">🧸</span><span class="gift-item-name">Мишка</span></div>
+<div class="gift-item" onclick="sendGift('💎', 'Алмаз')"><span class="gift-item-icon">💎</span><span class="gift-item-name">Алмаз</span></div>
+        <div class="gift-item" onclick="sendGift('🍕', 'Пицца')"><span class="gift-item-icon">🍕</span><span class="gift-item-name">Пицца</span></div>
+        <div class="gift-item" onclick="sendGift('🚀', 'Ракета')"><span class="gift-item-icon">🚀</span><span class="gift-item-name">Ракета</span></div>
+      </div>
+      <button class="close-store" onclick="closeGiftStore()">Отмена</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io();
+    var currentUser = "";
+    var currentPhone = "";
+    var currentTag = "";
+    var currentRoom = "general";
+
+    window.onload = function() {
+      var savedRooms = JSON.parse(localStorage.getItem('savedRooms') || '[]');
+      var allRooms = ['general'].concat(savedRooms.filter(r => r !== 'general'));
+      var chatList = document.getElementById('chat-list');
+      
+      allRooms.forEach(function(room) {
+        var newItem = document.createElement('div');
+        newItem.className = 'chat-list-item';
+        newItem.innerText = room === 'general' ? 'Общий чат' : room;
+        if (room === 'general') newItem.classList.add('active');
+        newItem.onclick = function() { switchRoom(room, this); };
+        chatList.appendChild(newItem);
+      });
+
+      var savedPhone = localStorage.getItem('savedPhone');
+      var savedPassword = localStorage.getItem('savedPassword');
+      if (savedPhone && savedPassword) {
+        socket.emit('login', { phone: savedPhone, password: savedPassword });
+      }
+    };
+
+    function login() {
+      var phone = document.getElementById('reg-phone').value;
+      var pass = document.getElementById('reg-password').value;
+      if (phone && pass) socket.emit('login', { phone: phone, password: pass });
+    }
+
+    socket.on('login success', (data) => {
+      currentUser = data.username;
+      currentPhone = data.phone;
+      currentTag = data.usernameTag || (data.username.toLowerCase());
+      
+      localStorage.setItem('savedPhone', currentPhone);
+      localStorage.setItem('savedPassword', document.getElementById('reg-password').value || localStorage.getItem('savedPassword'));
+      
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-app').style.display = 'flex';
+      
+      document.getElementById('prof-name').innerText = currentUser;
+      document.getElementById('prof-avatar').innerText = currentUser[0].toUpperCase();
+      document.getElementById('prof-phone').innerText = currentPhone;
+      document.getElementById('prof-usernameTag').innerText = "@" + currentTag;
+      
+      renderNFTs(data.nftCollection || []);
+      socket.emit('join room', currentRoom);
+    });
+
+    // --- НОВОЕ: Поиск пользователя ---
+    function searchUser() {
+      var tag = document.getElementById('search-input').value.trim().replace('@', '');
+      if (!tag) { alert("Введите юзернейм для поиска"); return; }
+      socket.emit('search user', tag);
+    }
+
+    socket.on('search user result', (data) => {
+      if (data.found) {
+        // Открываем личный чат
+        socket.emit('create private chat', { 
+          myTag: currentTag, 
+          targetTag: data.tag, 
+          targetName: data.username 
+        });
+      } else {
+        alert("Пользователь не найден!");
+      }
+    });
+
+    socket.on('private chat created', (data) => {
+      // Создаем комнату в списке, если её еще нет
+      var chatList = document.getElementById('chat-list');
+      var exists = false;
+      document.querySelectorAll('.chat-list-item').forEach(function(item) {
+        if (item.innerText === "👤 " + data.targetName) exists = true;
+      });
+
+      if (!exists) {
+        var newItem = document.createElement('div');
+        newItem.className = 'chat-list-item';
+        newItem.innerText = "👤 " + data.targetName; // Иконка человечка для ЛС
+        newItem.onclick = function() { switchRoom(data.roomId, this); };
+        chatList.
+appendChild(newItem);
+        
+        // Автоматически переходим в этот чат
+        switchRoom(data.roomId, newItem);
+      }
+    });
+
+    // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
+    socket.on('chat history', (history) => {
+      var messagesContainer = document.getElementById('messages');
+      messagesContainer.innerHTML = '';
+      history.forEach(function(data) {
+        var item = document.createElement('li');
+        item.innerHTML = '<b>' + data.user + ':</b> ' + data.text;
+        messagesContainer.appendChild(item);
+      });
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    });
+
+    function renderNFTs(collection) {
+      var grid = document.getElementById('my-nft-grid');
+      grid.innerHTML = '';
+      if (collection.length === 0) {
+        grid.innerHTML = '<div class="no-gifts">У вас пока нет подарков</div>';
+        return;
+      }
+      collection.forEach(function(gift) {
+        var item = document.createElement('div');
+        item.className = 'nft-item';
+        item.innerHTML = '<span class="nft-item-icon">' + gift.icon + '</span><span class="nft-item-name">' + gift.name + '</span>';
+        grid.appendChild(item);
+      });
+    }
+
+    socket.on('update nft collection', (collection) => { renderNFTs(collection); });
+
+    function openGiftStore() { document.getElementById('gift-store').style.display = 'flex'; }
+    function closeGiftStore() { document.getElementById('gift-store').style.display = 'none'; }
+
+    function sendGift(icon, name) {
+      socket.emit('send gift', { room: currentRoom, from: currentUser, giftIcon: icon, giftName: name });
+      closeGiftStore();
+      closeProfile();
+    }
+
+    function editName() {
+      var newName = prompt("Введите ваше новое имя:", currentUser);
+      if (newName && newName.trim() !== "") {
+        socket.emit('change user data', { phone: currentPhone, newName: newName.trim(), newTag: currentTag });
+      }
+    }
+
+    function editUsernameTag() {
+      var newTag = prompt("Введите новый юзернейм (латиница, цифры, _, мин. 3 символа):");
+      if (newTag && newTag.trim() !== "") {
+        newTag = newTag.trim().replace('@', '');
+        var regex = /^[a-zA-Z0-9_]+$/;
+        if (!regex.test(newTag)) { alert("Только английские буквы, цифры и _"); return; }
+        if (newTag.length < 3) { alert("Минимум 3 символа"); return; }
+        socket.emit('change user data', { phone: currentPhone, newName: currentUser, newTag: newTag });
+      }
+    }
+
+    socket.on('change user data success', (data) => {
+      currentUser = data.username;
+      currentTag = data.tag;
+      document.getElementById('prof-name').innerText = currentUser;
+      document.getElementById('prof-avatar').innerText = currentUser[0].toUpperCase();
+      document.getElementById('prof-usernameTag').innerText = "@" + currentTag;
+      alert("Данные обновлены!");
+    });
+
+    function openProfile() { document.getElementById('profile-screen').style.display = 'flex'; }
+    function closeProfile() { document.getElementById('profile-screen').style.display = 'none'; }
+
+    function switchRoom(roomName, element) {
+      currentRoom = roomName;
+      document.getElementById('current-room-title').innerText = element.innerText;
+      document.getElementById('messages').innerHTML = '';
+      socket.emit('join room', roomName);
+      document.querySelectorAll('.chat-list-item').forEach(function(item) { item.classList.remove('active'); });
+      element.classList.add('active');
+    }
+
+    function createRoom() {
+      var roomName = prompt("Название чата:");
+      if (!roomName) return;
+      var savedRooms = JSON.parse(localStorage.getItem('savedRooms') || '[]');
+      if (!savedRooms.includes(roomName)) {
+        savedRooms.push(roomName);
+        localStorage.setItem('savedRooms', JSON.stringify(savedRooms));
+      }
+      var chatList = document.getElementById('chat-list');
+      var newItem = document.createElement('div');
+      newItem.className = 'chat-list-item';
+      newItem.innerText = roomName;
+      newItem.onclick = function() { switchRoom(roomName, this); };
+      chatList.
+appendChild(newItem);
+      switchRoom(roomName, newItem);
+    }
+
+    document.getElementById('form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var input = document.getElementById('input');
+      if (input.value) {
+        socket.emit('chat message', { room: currentRoom, user: currentUser, text: input.value });
+        input.value = '';
+      }
+    });
+
+    socket.on('chat message', function(data) {
+      if (data.room === currentRoom) {
+        var item = document.createElement('li');
+        item.innerHTML = '<b>' + data.user + ':</b> ' + data.text;
+        document.getElementById('messages').appendChild(item);
+        var mc = document.getElementById('messages');
+        mc.scrollTop = mc.scrollHeight;
+      }
+    });
+
+    socket.on('gift message', function(data) {
+      if (data.room === currentRoom) {
+        var item = document.createElement('li');
+        item.className = 'gift-message';
+        item.innerHTML = '<span class="gift-icon">' + data.giftIcon + '</span><b>' + data.from + '</b> дарит:<br><span style="font-size:22px; color:#e65100; font-weight:bold;">' + data.giftName + '</span>';
+        document.getElementById('messages').appendChild(item);
+        var mc = document.getElementById('messages');
+        mc.scrollTop = mc.scrollHeight;
+      }
+    });
+  </script>
+</body>
+</html>
